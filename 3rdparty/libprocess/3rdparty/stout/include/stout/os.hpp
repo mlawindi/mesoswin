@@ -28,17 +28,33 @@
 #include <set>
 #include <string>
 
+#include <stout/bytes.hpp>
+#include <stout/duration.hpp>
 #include <stout/error.hpp>
 #include <stout/foreach.hpp>
 #include <stout/none.hpp>
 #include <stout/nothing.hpp>
 #include <stout/option.hpp>
 #include <stout/path.hpp>
+#include <stout/result.hpp>
 #include <stout/strings.hpp>
 #include <stout/try.hpp>
 #include <stout/unreachable.hpp>
 #include <stout/version.hpp>
 
+#include <stout/os/bootid.hpp>
+#include <stout/os/chdir.hpp>
+#include <stout/os/chown.hpp>
+#include <stout/os/exists.hpp>
+#include <stout/os/ls.hpp>
+#include <stout/os/mkdir.hpp>
+#include <stout/os/mktemp.hpp>
+#include <stout/os/mkdtemp.hpp>
+#include <stout/os/process.hpp>
+#include <stout/os/rm.hpp>
+#include <stout/os/rmdir.hpp>
+#include <stout/os/shell.hpp>
+#include <stout/os/stat.hpp>
 
 // For readability, we minimize the number of #ifdef blocks in the code by
 // splitting platform specifc system calls into separate directories.
@@ -48,12 +64,5 @@
 #include <stout/posix/os.hpp>
 #endif // __WINDOWS__
 
-
-namespace os {
-
-
-
-
-} // namespace os {
 
 #endif // __STOUT_OS_HPP__
