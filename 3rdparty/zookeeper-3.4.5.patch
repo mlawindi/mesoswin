@@ -1,9 +1,9 @@
 diff --git a/src/c/Cli.vcxproj b/src/c/Cli.vcxproj
-new file mode 100755
-index 0000000..9554f4a
+new file mode 100644
+index 0000000..206a8a9
 --- /dev/null
 +++ b/src/c/Cli.vcxproj
-@@ -0,0 +1,160 @@
+@@ -0,0 +1,164 @@
 +﻿<?xml version="1.0" encoding="utf-8"?>
 +<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup Label="ProjectConfigurations">
@@ -90,8 +90,9 @@ index 0000000..9554f4a
 +      </PrecompiledHeader>
 +      <WarningLevel>Level3</WarningLevel>
 +      <Optimization>Disabled</Optimization>
-+      <PreprocessorDefinitions>THREADED;WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>THREADED;WIN32;_DEBUG;_CONSOLE;_LIB;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
 +      <AdditionalIncludeDirectories>include;generated</AdditionalIncludeDirectories>
++	  <DisableSpecificWarnings>4996</DisableSpecificWarnings>
 +    </ClCompile>
 +    <Link>
 +      <SubSystem>Console</SubSystem>
@@ -105,8 +106,9 @@ index 0000000..9554f4a
 +      </PrecompiledHeader>
 +      <WarningLevel>Level3</WarningLevel>
 +      <Optimization>Disabled</Optimization>
-+      <PreprocessorDefinitions>THREADED;WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>THREADED;WIN32;_DEBUG;_CONSOLE;_LIB;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
 +      <AdditionalIncludeDirectories>include;generated</AdditionalIncludeDirectories>
++	  <DisableSpecificWarnings>4996</DisableSpecificWarnings>
 +    </ClCompile>
 +    <Link>
 +      <SubSystem>Console</SubSystem>
@@ -122,8 +124,9 @@ index 0000000..9554f4a
 +      <Optimization>MaxSpeed</Optimization>
 +      <FunctionLevelLinking>true</FunctionLevelLinking>
 +      <IntrinsicFunctions>true</IntrinsicFunctions>
-+      <PreprocessorDefinitions>THREADED;WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>THREADED;WIN32;NDEBUG;_CONSOLE;_LIB;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
 +      <AdditionalIncludeDirectories>include;generated</AdditionalIncludeDirectories>
++	  <DisableSpecificWarnings>4996</DisableSpecificWarnings>
 +    </ClCompile>
 +    <Link>
 +      <SubSystem>Console</SubSystem>
@@ -141,8 +144,9 @@ index 0000000..9554f4a
 +      <Optimization>MaxSpeed</Optimization>
 +      <FunctionLevelLinking>true</FunctionLevelLinking>
 +      <IntrinsicFunctions>true</IntrinsicFunctions>
-+      <PreprocessorDefinitions>THREADED;WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>THREADED;WIN32;NDEBUG;_CONSOLE;_LIB;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
 +      <AdditionalIncludeDirectories>include;generated</AdditionalIncludeDirectories>
++	  <DisableSpecificWarnings>4996</DisableSpecificWarnings>
 +    </ClCompile>
 +    <Link>
 +      <SubSystem>Console</SubSystem>
@@ -168,42 +172,274 @@ index 0000000..9554f4a
 diff --git a/src/c/include/recordio.h b/src/c/include/recordio.h
 old mode 100644
 new mode 100755
-index 4e1b78e..4e87e7b
+index 4e1b78e..69ec4c9
 --- a/src/c/include/recordio.h
 +++ b/src/c/include/recordio.h
-@@ -73,7 +73,7 @@ void close_buffer_iarchive(struct iarchive **ia);
+@@ -73,7 +73,11 @@ void close_buffer_iarchive(struct iarchive **ia);
  char *get_buffer(struct oarchive *);
  int get_buffer_len(struct oarchive *);
  
 -int64_t htonll(int64_t v);
-+uint64_t htonll(uint64_t v);
++#ifdef _WIN64
++uint64_t zoo_htonll(uint64_t v);
++#else
++int64_t zoo_htonll(int64_t v);
++#endif
  
  #ifdef __cplusplus
  }
 diff --git a/src/c/include/winconfig.h b/src/c/include/winconfig.h
 old mode 100644
 new mode 100755
-index a68dcc6..ce6d8ad
+index a68dcc6..b344df5
 --- a/src/c/include/winconfig.h
 +++ b/src/c/include/winconfig.h
-@@ -176,7 +176,9 @@
+@@ -1,3 +1,5 @@
++#pragma once
++
+ /* Define to 1 if you have the <arpa/inet.h> header file. */
+ #undef HAVE_ARPA_INET_H
+ 
+@@ -100,8 +102,7 @@
+ /* Define to 1 if you have the <unistd.h> header file. */
+ #undef HAVE_UNISTD_H
+ 
+-/* Define to the sub-directory in which libtool stores uninstalled libraries.
+-   */
++/* Define to the sub-directory in which libtool stores uninstalled libraries. */
+ #define LT_OBJDIR
+ 
+ /* Define to 1 if your C compiler doesn't accept -c and -o together. */
+@@ -171,12 +172,17 @@
+ #undef max
+ 
+ #include <errno.h>
++#include <stdlib.h>
+ 
+ #define strtok_r strtok_s
  #define localtime_r(a,b) localtime_s(b,a)
  #define get_errno() errno=GetLastError()
- #define random rand
--#define snprintf _snprintf
+-#define random rand
++
++inline int __cdecl random() { return rand(); }
++
 +#if ((defined(_MSC_VER) && _MSC_VER < 1900) || !defined(_MSC_VER)) // Define snprintf if VS version is less than 2015
-+#define snprintf _snprintf
+ #define snprintf _snprintf
 +#endif
  
  #define ACL ZKACL  // Conflict with windows API
  
-@@ -187,5 +189,5 @@
+@@ -187,5 +193,5 @@
  #define EWOULDBLOCK WSAEWOULDBLOCK
  #define EINPROGRESS WSAEINPROGRESS
  
 -typedef int pid_t;
 +typedef DWORD pid_t;
  #endif
+diff --git a/src/c/include/winconfig.h~ b/src/c/include/winconfig.h~
+new file mode 100755
+index 0000000..e4407b8
+--- /dev/null
++++ b/src/c/include/winconfig.h~
+@@ -0,0 +1,198 @@
++#pragma once
++
++/* Define to 1 if you have the <arpa/inet.h> header file. */
++#undef HAVE_ARPA_INET_H
++
++/* Define to 1 if you have the <dlfcn.h> header file. */
++#undef HAVE_DLFCN_H
++
++/* Define to 1 if you have the <fcntl.h> header file. */
++#undef HAVE_FCNTL_H
++
++/* Define to 1 if you have the file `generated/zookeeper.jute.c'. */
++#define HAVE_GENERATED_ZOOKEEPER_JUTE_C 1
++
++/* Define to 1 if you have the file `generated/zookeeper.jute.h'. */
++#define HAVE_GENERATED_ZOOKEEPER_JUTE_H 1
++
++/* Define to 1 if you have the `getcwd' function. */
++#undef HAVE_GETCWD
++
++/* Define to 1 if you have the `gethostbyname' function. */
++#undef HAVE_GETHOSTBYNAME
++
++/* Define to 1 if you have the `gethostname' function. */
++#define HAVE_GETHOSTNAME 1
++
++/* Define to 1 if you have the `getlogin' function. */
++#undef HAVE_GETLOGIN
++
++/* Define to 1 if you have the `getpwuid_r' function. */
++#undef HAVE_GETPWUID_R
++
++/* Define to 1 if you have the `gettimeofday' function. */
++#undef HAVE_GETTIMEOFDAY
++
++/* Define to 1 if you have the `getuid' function. */
++#undef HAVE_GETUID
++
++/* Define to 1 if you have the <inttypes.h> header file. */
++#undef HAVE_INTTYPES_H
++
++/* Define to 1 if you have the `memmove' function. */
++#undef HAVE_MEMMOVE
++
++/* Define to 1 if you have the <memory.h> header file. */
++#undef HAVE_MEMORY_H
++
++/* Define to 1 if you have the `memset' function. */
++#undef HAVE_MEMSET
++
++/* Define to 1 if you have the <netdb.h> header file. */
++#undef HAVE_NETDB_H
++
++/* Define to 1 if you have the <netinet/in.h> header file. */
++#undef HAVE_NETINET_IN_H
++
++/* Define to 1 if you have the `poll' function. */
++#undef HAVE_POLL
++
++/* Define to 1 if you have the `socket' function. */
++#undef HAVE_SOCKET
++
++/* Define to 1 if you have the <stdint.h> header file. */
++#undef HAVE_STDINT_H
++
++/* Define to 1 if you have the <stdlib.h> header file. */
++#define HAVE_STDLIB_H 1
++
++/* Define to 1 if you have the `strchr' function. */
++#define HAVE_STRCHR 1
++
++/* Define to 1 if you have the `strdup' function. */
++#define HAVE_STRDUP 1
++
++/* Define to 1 if you have the `strerror' function. */
++#define HAVE_STRERROR 1
++
++/* Define to 1 if you have the <strings.h> header file. */
++#undef HAVE_STRINGS_H
++
++/* Define to 1 if you have the <string.h> header file. */
++#undef HAVE_STRING_H
++
++/* Define to 1 if you have the `strtol' function. */
++#undef HAVE_STRTOL
++
++/* Define to 1 if you have the <sys/socket.h> header file. */
++#undef HAVE_SYS_SOCKET_H
++
++/* Define to 1 if you have the <sys/stat.h> header file. */
++#undef HAVE_SYS_STAT_H
++
++/* Define to 1 if you have the <sys/time.h> header file. */
++#undef HAVE_SYS_TIME_H
++
++/* Define to 1 if you have the <sys/types.h> header file. */
++#undef HAVE_SYS_TYPES_H
++
++/* Define to 1 if you have the <sys/utsname.h> header file. */
++#undef HAVE_SYS_UTSNAME_H
++
++/* Define to 1 if you have the <unistd.h> header file. */
++#undef HAVE_UNISTD_H
++
++/* Define to the sub-directory in which libtool stores uninstalled libraries.
++   */
++#define LT_OBJDIR
++
++/* Define to 1 if your C compiler doesn't accept -c and -o together. */
++/* #undef NO_MINUS_C_MINUS_O */
++
++/* Name of package */
++#define PACKAGE "c-client-src"
++
++/* Define to the address where bug reports for this package should be sent. */
++#define PACKAGE_BUGREPORT "user@zookeeper.apache.org"
++
++/* Define to the full name of this package. */
++#define PACKAGE_NAME "zookeeper C client"
++
++/* Define to the full name and version of this package. */
++#define PACKAGE_STRING "zookeeper C client 3.4.0 win32"
++
++/* Define to the one symbol short name of this package. */
++#define PACKAGE_TARNAME "c-client-src"
++
++/* Define to the home page for this package. */
++#define PACKAGE_URL ""
++
++/* Define to the version of this package. */
++#define PACKAGE_VERSION "3.4.0"
++
++/* poll() second argument type */
++#define POLL_NFDS_TYPE
++
++/* Define to 1 if you have the ANSI C header files. */
++#define STDC_HEADERS
++
++/* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
++#define TIME_WITH_SYS_TIME
++
++/* Version number of package */
++#define VERSION "3.4.0"
++
++/* Define to empty if `const' does not conform to ANSI C. */
++/* #undef const */
++
++/* Define to `__inline__' or `__inline' if that's what the C compiler
++   calls it, or to nothing if 'inline' is not supported under any name.  */
++#ifndef __cplusplus
++#define inline __inline
++#endif
++#ifdef WIN32
++#define __attribute__(x)
++#define __func__ __FUNCTION__
++
++#ifndef _WIN32_WINNT_NT4
++#define _WIN32_WINNT_NT4 0x0400
++#endif
++
++#define NTDDI_VERSION _WIN32_WINNT_NT4
++#define _WIN32_WINNT _WIN32_WINNT_NT4
++
++#define _CRT_SECURE_NO_WARNINGS
++#define WIN32_LEAN_AND_MEAN
++#include <Windows.h>
++#include <Winsock2.h>
++#include <winstdint.h>
++#include <process.h>
++#include <ws2tcpip.h>
++#undef AF_INET6
++#undef min
++#undef max
++
++#include <errno.h>
++#include <stdlib.h>
++
++#define strtok_r strtok_s
++#define localtime_r(a,b) localtime_s(b,a)
++#define get_errno() errno=GetLastError()
++
++inline int __cdecl random() { return rand(); }
++
++#if ((defined(_MSC_VER) && _MSC_VER < 1900) || !defined(_MSC_VER)) // Define snprintf if VS version is less than 2015
++#define snprintf _snprintf
++#endif
++
++#define ACL ZKACL  // Conflict with windows API
++
++#define EAI_ADDRFAMILY WSAEINVAL
++#define EHOSTDOWN EPIPE
++#define ESTALE ENODEV
++
++#define EWOULDBLOCK WSAEWOULDBLOCK
++#define EINPROGRESS WSAEINPROGRESS
++
++typedef DWORD pid_t;
++#endif
 diff --git a/src/c/include/winstdint.h b/src/c/include/winstdint.h
 old mode 100644
 new mode 100755
@@ -345,7 +581,7 @@ index 8916674..69bea16 100644
      tmp=htonl(passwd_len);
      buf.append((char*)&tmp,sizeof(tmp));
 diff --git a/src/c/zookeeper-vs2015.sln b/src/c/zookeeper-vs2015.sln
-new file mode 100755
+new file mode 100644
 index 0000000..44d738f
 --- /dev/null
 +++ b/src/c/zookeeper-vs2015.sln
@@ -388,11 +624,11 @@ index 0000000..44d738f
 +	EndGlobalSection
 +EndGlobal
 diff --git a/src/c/zookeeper.vcxproj b/src/c/zookeeper.vcxproj
-new file mode 100755
-index 0000000..a762d04
+new file mode 100644
+index 0000000..13bf902
 --- /dev/null
 +++ b/src/c/zookeeper.vcxproj
-@@ -0,0 +1,194 @@
+@@ -0,0 +1,198 @@
 +﻿<?xml version="1.0" encoding="utf-8"?>
 +<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup Label="ProjectConfigurations">
@@ -475,7 +711,7 @@ index 0000000..a762d04
 +    <ClCompile>
 +      <Optimization>Disabled</Optimization>
 +      <AdditionalIncludeDirectories>./include;./generated;./hashtable;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;ZOOKEEPER_EXPORTS;DLL_EXPORT;THREADED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;ZOOKEEPER_EXPORTS;DLL_EXPORT;THREADED;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
 +      <MinimalRebuild>true</MinimalRebuild>
 +      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
 +      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -483,6 +719,7 @@ index 0000000..a762d04
 +      <WarningLevel>Level3</WarningLevel>
 +      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
 +      <CompileAs>CompileAsC</CompileAs>
++	  <DisableSpecificWarnings>4996</DisableSpecificWarnings>
 +    </ClCompile>
 +    <Link>
 +      <AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -497,7 +734,7 @@ index 0000000..a762d04
 +    <ClCompile>
 +      <Optimization>Disabled</Optimization>
 +      <AdditionalIncludeDirectories>./include;./generated;./hashtable;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;ZOOKEEPER_EXPORTS;DLL_EXPORT;THREADED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;ZOOKEEPER_EXPORTS;DLL_EXPORT;THREADED;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
 +      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
 +      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
 +      <PrecompiledHeader>
@@ -505,6 +742,7 @@ index 0000000..a762d04
 +      <WarningLevel>Level3</WarningLevel>
 +      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
 +      <CompileAs>CompileAsC</CompileAs>
++	  <DisableSpecificWarnings>4996</DisableSpecificWarnings>
 +    </ClCompile>
 +    <Link>
 +      <AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -518,12 +756,13 @@ index 0000000..a762d04
 +  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
 +    <ClCompile>
 +      <AdditionalIncludeDirectories>./include;./generated;./hashtable;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;ZOOKEEPER_EXPORTS;DLL_EXPORT;THREADED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;ZOOKEEPER_EXPORTS;DLL_EXPORT;THREADED;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
 +      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
 +      <PrecompiledHeader />
 +      <WarningLevel>Level3</WarningLevel>
 +      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
 +      <CompileAs>CompileAsC</CompileAs>
++	  <DisableSpecificWarnings>4996</DisableSpecificWarnings>
 +    </ClCompile>
 +    <Link>
 +      <AdditionalDependencies>WS2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -538,7 +777,7 @@ index 0000000..a762d04
 +  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
 +    <ClCompile>
 +      <AdditionalIncludeDirectories>./include;./generated;./hashtable;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;ZOOKEEPER_EXPORTS;DLL_EXPORT;THREADED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;ZOOKEEPER_EXPORTS;DLL_EXPORT;THREADED;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
 +      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
 +      <PrecompiledHeader>
 +      </PrecompiledHeader>
@@ -546,6 +785,7 @@ index 0000000..a762d04
 +      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
 +      <CompileAs>CompileAsC</CompileAs>
 +      <AssemblerOutput>NoListing</AssemblerOutput>
++	  <DisableSpecificWarnings>4996</DisableSpecificWarnings>
 +    </ClCompile>
 +    <Link>
 +      <AdditionalDependencies>WS2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
