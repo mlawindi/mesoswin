@@ -317,6 +317,42 @@ decltype(_access(fileName.c_str(), accessMode))
 {
   return _access(fileName.c_str(), accessMode);
 }
+
+inline Result<Process> process(pid_t pid)
+{
+  /*
+  // Page size, used for memory accounting.
+  SYSTEM_INFO systemInfo;
+  GetNativeSystemInfo (&systemInfo);
+  static const long pageSize = systemInfo.dwPageSize;
+  if (pageSize <= 0) {
+    return Error("Failed to get SYSTEM_INFO::dwPageSize");
+  }
+
+  // Number of clock ticks per second, used for cpu accounting.
+  long tmpTicks = 0;
+  QueryPerformanceFrequency((LARGE_INTEGER*)&tmpTicks);
+  static const long ticks = tmpTicks;
+  if (ticks <= 0) {
+    return Error("Failed to get QueryPerformanceFrequency");
+  }
+  */
+
+  //
+  // TODO: What we need to do here is:
+  // - Check if process still exists based on pid
+  // - Get windows process stats and fill up process struct properly
+  return Process(pid,
+    0,
+    0,
+    0,
+    0,
+    Option<Duration>::none(),
+    Option<Duration>::none(),
+    "",
+    false);
+}
+
 } // namespace os {
 
 
