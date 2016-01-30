@@ -40,10 +40,33 @@ using std::vector;
 namespace process {
 namespace internal {
 
-extern void cleanup(
-    const Future<Option<int>>& result,
-    Promise<Option<int>>* promise,
-    const Subprocess& subprocess);
+//NOTE: Per Alex Naparu recommendation I "copied" the implementation
+// of cleanup from \mesos\3rdparty\libprocess\src\subprocess.cpp
+// to here and commented the extern part as a temp solution to a linkage
+// issue
+
+//extern void cleanup(
+//    const Future<Option<int>>& result,
+//    Promise<Option<int>>* promise,
+//    const Subprocess& subprocess);
+
+static void cleanup(
+  const Future<Option<int>>& result,
+  Promise<Option<int>>* promise,
+  const Subprocess& subprocess)
+{
+  CHECK(!result.isPending());
+  CHECK(!result.isDiscarded());
+
+  if (result.isFailed()) {
+    promise->fail(result.failure());
+  }
+  else {
+    promise->set(result.get());
+  }
+
+  delete promise;
+}
 
 static void close(
     HANDLE stdinHandle[2],
