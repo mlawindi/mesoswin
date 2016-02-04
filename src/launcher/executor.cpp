@@ -17,7 +17,9 @@
 #include <signal.h>
 #include <stdio.h>
 
+#ifndef __WINDOWS__
 #include <sys/wait.h>
+#endif // __WINDOWS__
 
 #include <iostream>
 #include <list>

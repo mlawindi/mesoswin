@@ -85,6 +85,15 @@ endif (NOT ENABLE_LIBEVENT)
 set(
   PROCESS_AGENT_TARGET slave
   CACHE STRING "Agent target")
+set(
+  MESOS_EXECUTOR mesos-executor
+  CACHE STRING "Executor target")
+set(
+  MESOS_CONTAINERIZER mesos-containerizer
+  CACHE STRING "Executor target")
+set(
+  MESOS_MASTER mesos-master
+  CACHE STRING "Executor target")
 
 
 # COMPILER CONFIGURATION.

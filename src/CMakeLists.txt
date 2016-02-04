@@ -377,3 +377,4 @@ add_dependencies(${MESOS_TARGET} ${AGENT_DEPENDENCIES})
 target_link_libraries(${MESOS_TARGET} ${AGENT_LIBS})
 
 add_subdirectory(slave)
+add_subdirectory(launcher)
