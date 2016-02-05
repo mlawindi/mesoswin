@@ -238,6 +238,7 @@ set(AGENT_SRC
   slave/container_loggers/sandbox.cpp
   slave/containerizer/mesos/isolator.cpp
   slave/containerizer/mesos/launcher.cpp
+  slave/containerizer/mesos/mount.cpp
   slave/containerizer/mesos/provisioner/provisioner.cpp
   slave/containerizer/mesos/provisioner/backend.cpp
   slave/containerizer/mesos/provisioner/backends/copy.cpp
@@ -254,7 +255,6 @@ if (NOT WIN32)
     ${AGENT_SRC}
     slave/slave.cpp
     slave/containerizer/docker.cpp
-    slave/containerizer/mesos/mount.cpp
     slave/containerizer/mesos/isolators/posix/disk.cpp
     slave/containerizer/mesos/provisioner/docker/message.proto
     slave/containerizer/mesos/provisioner/docker/metadata_manager.cpp
